@@ -237,7 +237,11 @@ const AppointmentScheduler = () => {
                 <Checkbox
                   id="chronicCondition"
                   checked={isChronicCondition}
-                  onCheckedChange={setIsChronicCondition}
+                  onCheckedChange={(checked) => {
+                    if (typeof checked === 'boolean') {
+                      setIsChronicCondition(checked);
+                    }
+                  }}
                 />
                 <div className="flex flex-col">
                   <Label htmlFor="chronicCondition" className="text-orange-800 font-medium">
