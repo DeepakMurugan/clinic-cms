@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Calendar, FileText, IndianRupee, UserPlus, Clock, Activity, TrendingUp, LogOut, Settings } from "lucide-react";
+import { Users, Calendar, FileText, IndianRupee, UserPlus, Clock, Activity, TrendingUp, LogOut, Settings, Building } from "lucide-react";
 import PatientRegistration from "@/components/PatientRegistration";
 import AppointmentScheduler from "@/components/AppointmentScheduler";
 import DoctorDashboard from "@/components/DoctorDashboard";
@@ -52,6 +52,15 @@ const Index = () => {
   };
 
   const getAvailableTabs = () => {
+    // Super Admin only sees reports and management
+    if (activeRole === 'superadmin') {
+      return [
+        { value: "dashboard", label: "Branch Overview", icon: Building },
+        { value: "reports", label: "Reports", icon: TrendingUp },
+        { value: "management", label: "Management", icon: Settings }
+      ];
+    }
+
     const baseTabs = [
       { value: "dashboard", label: "Dashboard", icon: Activity },
       { value: "patients", label: "Patients", icon: Users },
@@ -66,7 +75,7 @@ const Index = () => {
       baseTabs.push({ value: "billing", label: "Billing", icon: IndianRupee });
     }
 
-    if (activeRole === 'admin' || activeRole === 'superadmin') {
+    if (activeRole === 'admin') {
       baseTabs.push(
         { value: "reports", label: "Reports", icon: TrendingUp },
         { value: "management", label: "Management", icon: Settings }
@@ -75,6 +84,26 @@ const Index = () => {
 
     return baseTabs;
   };
+
+  // Super Admin branch overview data
+  const branchOverview = [
+    {
+      name: "Main Clinic",
+      location: "Mumbai",
+      patients: 150,
+      staff: 12,
+      revenue: 45600,
+      appointments: 24
+    },
+    {
+      name: "North Branch",
+      location: "Delhi", 
+      patients: 95,
+      staff: 8,
+      revenue: 28400,
+      appointments: 16
+    }
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -120,119 +149,227 @@ const Index = () => {
 
           {/* Dashboard Overview */}
           <TabsContent value="dashboard" className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-3xl font-bold text-gray-900">Dashboard</h2>
-              <Badge className={`${roleColors[activeRole]} text-white`}>
-                {activeRole.charAt(0).toUpperCase() + activeRole.slice(1)} View
-              </Badge>
-            </div>
+            {activeRole === 'superadmin' ? (
+              // Super Admin Branch Overview
+              <>
+                <div className="flex justify-between items-center">
+                  <h2 className="text-3xl font-bold text-gray-900">Branch Overview</h2>
+                  <Badge className="bg-purple-500 text-white">Super Admin View</Badge>
+                </div>
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card className="hover:shadow-lg transition-shadow">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Today's Patients</CardTitle>
-                  <Users className="h-4 w-4 text-blue-600" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{todayStats.patients}</div>
-                  <p className="text-xs text-muted-foreground">+3 from yesterday</p>
-                </CardContent>
-              </Card>
+                {/* Overall Stats */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <Card className="hover:shadow-lg transition-shadow">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Total Branches</CardTitle>
+                      <Building className="h-4 w-4 text-purple-600" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{branchOverview.length}</div>
+                      <p className="text-xs text-muted-foreground">Active branches</p>
+                    </CardContent>
+                  </Card>
 
-              <Card className="hover:shadow-lg transition-shadow">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Appointments</CardTitle>
-                  <Calendar className="h-4 w-4 text-green-600" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{todayStats.appointments}</div>
-                  <p className="text-xs text-muted-foreground">{todayStats.pending} pending</p>
-                </CardContent>
-              </Card>
+                  <Card className="hover:shadow-lg transition-shadow">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Total Patients</CardTitle>
+                      <Users className="h-4 w-4 text-blue-600" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{branchOverview.reduce((acc, branch) => acc + branch.patients, 0)}</div>
+                      <p className="text-xs text-muted-foreground">Across all branches</p>
+                    </CardContent>
+                  </Card>
 
-              {activeRole !== 'doctor' && (
-                <Card className="hover:shadow-lg transition-shadow">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Revenue</CardTitle>
-                    <IndianRupee className="h-4 w-4 text-purple-600" />
+                  <Card className="hover:shadow-lg transition-shadow">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                      <IndianRupee className="h-4 w-4 text-green-600" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">₹{branchOverview.reduce((acc, branch) => acc + branch.revenue, 0).toLocaleString()}</div>
+                      <p className="text-xs text-muted-foreground">This month</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="hover:shadow-lg transition-shadow">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Total Staff</CardTitle>
+                      <Users className="h-4 w-4 text-orange-600" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{branchOverview.reduce((acc, branch) => acc + branch.staff, 0)}</div>
+                      <p className="text-xs text-muted-foreground">Active staff members</p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Branch Details */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Branch Performance</CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">₹{todayStats.revenue.toLocaleString()}</div>
-                    <p className="text-xs text-muted-foreground">Today's collection</p>
+                  <CardContent className="space-y-4">
+                    {branchOverview.map((branch, index) => (
+                      <Card key={index} className="border-l-4 border-l-purple-500">
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="space-y-2">
+                              <div className="flex items-center space-x-2">
+                                <h3 className="text-lg font-semibold">{branch.name}</h3>
+                                <Badge variant="outline">{branch.location}</Badge>
+                              </div>
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                <div>
+                                  <span className="text-gray-600">Patients:</span>
+                                  <div className="font-semibold">{branch.patients}</div>
+                                </div>
+                                <div>
+                                  <span className="text-gray-600">Staff:</span>
+                                  <div className="font-semibold">{branch.staff}</div>
+                                </div>
+                                <div>
+                                  <span className="text-gray-600">Revenue:</span>
+                                  <div className="font-semibold">₹{branch.revenue.toLocaleString()}</div>
+                                </div>
+                                <div>
+                                  <span className="text-gray-600">Today's Appointments:</span>
+                                  <div className="font-semibold">{branch.appointments}</div>
+                                </div>
+                              </div>
+                            </div>
+                            <Button size="sm" variant="outline">
+                              View Details
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
                   </CardContent>
                 </Card>
-              )}
-
-              <Card className="hover:shadow-lg transition-shadow">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Queue Status</CardTitle>
-                  <Clock className="h-4 w-4 text-orange-600" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{todayStats.pending}</div>
-                  <p className="text-xs text-muted-foreground">Patients waiting</p>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Quick Actions */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <Button 
-                    className="h-20 flex flex-col space-y-2" 
-                    variant="outline"
-                    onClick={() => setActiveModule('patients')}
-                  >
-                    <UserPlus className="h-6 w-6" />
-                    <span>New Patient</span>
-                  </Button>
-                  <Button 
-                    className="h-20 flex flex-col space-y-2" 
-                    variant="outline"
-                    onClick={() => setActiveModule('appointments')}
-                  >
-                    <Calendar className="h-6 w-6" />
-                    <span>Book Appointment</span>
-                  </Button>
-                  {activeRole === 'doctor' && (
-                    <Button 
-                      className="h-20 flex flex-col space-y-2" 
-                      variant="outline"
-                      onClick={() => setActiveModule('consultation')}
-                    >
-                      <FileText className="h-6 w-6" />
-                      <span>Consultation</span>
-                    </Button>
-                  )}
-                  {activeRole !== 'doctor' && (
-                    <Button 
-                      className="h-20 flex flex-col space-y-2" 
-                      variant="outline"
-                      onClick={() => setActiveModule('billing')}
-                    >
-                      <IndianRupee className="h-6 w-6" />
-                      <span>Create Bill</span>
-                    </Button>
-                  )}
+              </>
+            ) : (
+              // Regular dashboard for other roles
+              <>
+                <div className="flex justify-between items-center">
+                  <h2 className="text-3xl font-bold text-gray-900">Dashboard</h2>
+                  <Badge className={`${roleColors[activeRole]} text-white`}>
+                    {activeRole.charAt(0).toUpperCase() + activeRole.slice(1)} View
+                  </Badge>
                 </div>
-              </CardContent>
-            </Card>
+
+                {/* Stats Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <Card className="hover:shadow-lg transition-shadow">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Today's Patients</CardTitle>
+                      <Users className="h-4 w-4 text-blue-600" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{todayStats.patients}</div>
+                      <p className="text-xs text-muted-foreground">+3 from yesterday</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="hover:shadow-lg transition-shadow">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Appointments</CardTitle>
+                      <Calendar className="h-4 w-4 text-green-600" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{todayStats.appointments}</div>
+                      <p className="text-xs text-muted-foreground">{todayStats.pending} pending</p>
+                    </CardContent>
+                  </Card>
+
+                  {activeRole !== 'doctor' && (
+                    <Card className="hover:shadow-lg transition-shadow">
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Revenue</CardTitle>
+                        <IndianRupee className="h-4 w-4 text-purple-600" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">₹{todayStats.revenue.toLocaleString()}</div>
+                        <p className="text-xs text-muted-foreground">Today's collection</p>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  <Card className="hover:shadow-lg transition-shadow">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Queue Status</CardTitle>
+                      <Clock className="h-4 w-4 text-orange-600" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{todayStats.pending}</div>
+                      <p className="text-xs text-muted-foreground">Patients waiting</p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Quick Actions */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Quick Actions</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <Button 
+                        className="h-20 flex flex-col space-y-2" 
+                        variant="outline"
+                        onClick={() => setActiveModule('patients')}
+                      >
+                        <UserPlus className="h-6 w-6" />
+                        <span>New Patient</span>
+                      </Button>
+                      <Button 
+                        className="h-20 flex flex-col space-y-2" 
+                        variant="outline"
+                        onClick={() => setActiveModule('appointments')}
+                      >
+                        <Calendar className="h-6 w-6" />
+                        <span>Book Appointment</span>
+                      </Button>
+                      {activeRole === 'doctor' && (
+                        <Button 
+                          className="h-20 flex flex-col space-y-2" 
+                          variant="outline"
+                          onClick={() => setActiveModule('consultation')}
+                        >
+                          <FileText className="h-6 w-6" />
+                          <span>Consultation</span>
+                        </Button>
+                      )}
+                      {activeRole !== 'doctor' && (
+                        <Button 
+                          className="h-20 flex flex-col space-y-2" 
+                          variant="outline"
+                          onClick={() => setActiveModule('billing')}
+                        >
+                          <IndianRupee className="h-6 w-6" />
+                          <span>Create Bill</span>
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            )}
           </TabsContent>
 
-          {/* Patient Management */}
-          <TabsContent value="patients">
-            <PatientRegistration />
-          </TabsContent>
+          {/* Patient Management - Only for non-superadmin */}
+          {activeRole !== 'superadmin' && (
+            <TabsContent value="patients">
+              <PatientRegistration />
+            </TabsContent>
+          )}
 
-          {/* Appointment Scheduler */}
-          <TabsContent value="appointments">
-            <AppointmentScheduler />
-          </TabsContent>
+          {/* Appointment Scheduler - Only for non-superadmin */}
+          {activeRole !== 'superadmin' && (
+            <TabsContent value="appointments">
+              <AppointmentScheduler />
+            </TabsContent>
+          )}
 
           {/* Doctor Consultation Dashboard */}
           {activeRole === 'doctor' && (
@@ -241,8 +378,8 @@ const Index = () => {
             </TabsContent>
           )}
 
-          {/* Billing Module */}
-          {activeRole !== 'doctor' && (
+          {/* Billing Module - Only for non-superadmin and non-doctor */}
+          {activeRole !== 'doctor' && activeRole !== 'superadmin' && (
             <TabsContent value="billing">
               <BillingModule userRole={activeRole} />
             </TabsContent>

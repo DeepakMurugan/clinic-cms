@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building, Users, UserPlus, Edit, Trash2, MapPin, Phone, Mail } from "lucide-react";
+import { Building, Users, UserPlus, Edit, Trash2, MapPin, Phone, Mail, Key } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface AdminManagementProps {
@@ -21,7 +20,9 @@ const AdminManagement = ({ userRole }: AdminManagementProps) => {
     address: "",
     phone: "",
     email: "",
-    manager: ""
+    manager: "",
+    adminUsername: "",
+    adminPassword: ""
   });
 
   const [staffForm, setStaffForm] = useState({
@@ -31,7 +32,9 @@ const AdminManagement = ({ userRole }: AdminManagementProps) => {
     role: "",
     branch: "",
     speciality: "",
-    consultationFee: ""
+    consultationFee: "",
+    username: "",
+    password: ""
   });
 
   // Mock data
@@ -114,11 +117,18 @@ const AdminManagement = ({ userRole }: AdminManagementProps) => {
     }
 
     const branchId = generateBranchId();
-    console.log("Creating branch:", { ...branchForm, branchId });
+    console.log("Creating branch:", { 
+      ...branchForm, 
+      branchId,
+      adminCredentials: {
+        username: branchForm.adminUsername,
+        password: branchForm.adminPassword
+      }
+    });
     
     toast({
       title: "Branch Created Successfully",
-      description: `Branch ID: ${branchId}`,
+      description: `Branch ID: ${branchId}${branchForm.adminUsername ? ` | Admin Login: ${branchForm.adminUsername}` : ''}`,
     });
 
     setBranchForm({
@@ -126,7 +136,9 @@ const AdminManagement = ({ userRole }: AdminManagementProps) => {
       address: "",
       phone: "",
       email: "",
-      manager: ""
+      manager: "",
+      adminUsername: "",
+      adminPassword: ""
     });
   };
 
@@ -143,11 +155,18 @@ const AdminManagement = ({ userRole }: AdminManagementProps) => {
     }
 
     const staffId = generateStaffId();
-    console.log("Creating staff:", { ...staffForm, staffId });
+    console.log("Creating staff:", { 
+      ...staffForm, 
+      staffId,
+      loginCredentials: {
+        username: staffForm.username,
+        password: staffForm.password
+      }
+    });
     
     toast({
       title: "Staff Member Added Successfully",
-      description: `Staff ID: ${staffId}`,
+      description: `Staff ID: ${staffId}${staffForm.username ? ` | Login: ${staffForm.username}` : ''}`,
     });
 
     setStaffForm({
@@ -157,7 +176,9 @@ const AdminManagement = ({ userRole }: AdminManagementProps) => {
       role: "",
       branch: "",
       speciality: "",
-      consultationFee: ""
+      consultationFee: "",
+      username: "",
+      password: ""
     });
   };
 
@@ -368,6 +389,38 @@ const AdminManagement = ({ userRole }: AdminManagementProps) => {
                       className="mt-1"
                     />
                   </div>
+                  
+                  {/* Admin Login Credentials */}
+                  <div className="border-t pt-4">
+                    <div className="flex items-center space-x-2 mb-3">
+                      <Key className="h-4 w-4" />
+                      <Label className="text-sm font-medium">Branch Admin Login (Optional)</Label>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="adminUsername">Username</Label>
+                        <Input
+                          id="adminUsername"
+                          value={branchForm.adminUsername}
+                          onChange={(e) => setBranchForm({...branchForm, adminUsername: e.target.value})}
+                          placeholder="admin_username"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="adminPassword">Password</Label>
+                        <Input
+                          id="adminPassword"
+                          type="password"
+                          value={branchForm.adminPassword}
+                          onChange={(e) => setBranchForm({...branchForm, adminPassword: e.target.value})}
+                          placeholder="password123"
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
                   <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
                     <Building className="h-4 w-4 mr-2" />
                     Create Branch
@@ -473,6 +526,38 @@ const AdminManagement = ({ userRole }: AdminManagementProps) => {
                       </div>
                     </div>
                   )}
+                  
+                  {/* Staff Login Credentials */}
+                  <div className="border-t pt-4">
+                    <div className="flex items-center space-x-2 mb-3">
+                      <Key className="h-4 w-4" />
+                      <Label className="text-sm font-medium">Login Credentials (Optional)</Label>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="staffUsername">Username</Label>
+                        <Input
+                          id="staffUsername"
+                          value={staffForm.username}
+                          onChange={(e) => setStaffForm({...staffForm, username: e.target.value})}
+                          placeholder="staff_username"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="staffPassword">Password</Label>
+                        <Input
+                          id="staffPassword"
+                          type="password"
+                          value={staffForm.password}
+                          onChange={(e) => setStaffForm({...staffForm, password: e.target.value})}
+                          placeholder="password123"
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
                   <Button type="submit" className="w-full bg-green-600 hover:bg-green-700">
                     <UserPlus className="h-4 w-4 mr-2" />
                     Add Staff Member
