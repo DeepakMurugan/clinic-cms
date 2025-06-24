@@ -334,7 +334,7 @@ const DoctorDashboard = () => {
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
-                      <Prescription className="h-5 w-5" />
+                      <FileText className="h-5 w-5" />
                       <span>Prescription</span>
                     </CardTitle>
                   </CardHeader>
