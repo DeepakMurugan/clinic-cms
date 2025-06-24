@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building, Users, UserPlus, Edit, Trash2, MapPin, Phone, Mail, Key } from "lucide-react";
+import { Building, Users, UserPlus, Edit, Trash2, MapPin, Phone, Mail, Key, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface AdminManagementProps {
@@ -15,6 +15,8 @@ interface AdminManagementProps {
 
 const AdminManagement = ({ userRole }: AdminManagementProps) => {
   const { toast } = useToast();
+  const [searchTerm, setSearchTerm] = useState("");
+  
   const [branchForm, setBranchForm] = useState({
     name: "",
     address: "",
@@ -184,144 +186,204 @@ const AdminManagement = ({ userRole }: AdminManagementProps) => {
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case 'doctor': return 'bg-green-500';
-      case 'receptionist': return 'bg-blue-500';
-      case 'admin': return 'bg-purple-500';
-      default: return 'bg-gray-500';
+      case 'doctor': return 'bg-gradient-to-r from-emerald-500 to-green-600';
+      case 'receptionist': return 'bg-gradient-to-r from-blue-500 to-cyan-600';
+      case 'admin': return 'bg-gradient-to-r from-purple-500 to-violet-600';
+      default: return 'bg-gradient-to-r from-gray-500 to-slate-600';
     }
   };
 
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold text-gray-900">Admin Management</h2>
-        <Badge variant="outline">Role: {userRole}</Badge>
-      </div>
+  const filteredStaff = staff.filter(member =>
+    member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    member.role.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-      <Tabs defaultValue="branches" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="branches" className="flex items-center space-x-2">
+  // Determine which tabs to show based on role
+  const getTabsList = () => {
+    if (userRole === 'superadmin') {
+      return (
+        <TabsList className="grid w-full grid-cols-3 bg-slate-100 p-1 rounded-xl">
+          <TabsTrigger value="branches" className="flex items-center space-x-2 data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-lg transition-all">
             <Building className="h-4 w-4" />
             <span>Branches</span>
           </TabsTrigger>
-          <TabsTrigger value="staff" className="flex items-center space-x-2">
+          <TabsTrigger value="staff" className="flex items-center space-x-2 data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-lg transition-all">
             <Users className="h-4 w-4" />
             <span>Staff Management</span>
           </TabsTrigger>
-          <TabsTrigger value="create" className="flex items-center space-x-2">
+          <TabsTrigger value="create" className="flex items-center space-x-2 data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-lg transition-all">
             <UserPlus className="h-4 w-4" />
             <span>Create New</span>
           </TabsTrigger>
         </TabsList>
+      );
+    } else {
+      return (
+        <TabsList className="grid w-full grid-cols-2 bg-slate-100 p-1 rounded-xl">
+          <TabsTrigger value="staff" className="flex items-center space-x-2 data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-lg transition-all">
+            <Users className="h-4 w-4" />
+            <span>Staff Management</span>
+          </TabsTrigger>
+          <TabsTrigger value="create" className="flex items-center space-x-2 data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-lg transition-all">
+            <UserPlus className="h-4 w-4" />
+            <span>Add Staff</span>
+          </TabsTrigger>
+        </TabsList>
+      );
+    }
+  };
 
-        {/* Branches Tab */}
-        <TabsContent value="branches" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Building className="h-5 w-5" />
-                <span>Branch Management</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {branches.map((branch) => (
-                <Card key={branch.id} className="border-l-4 border-l-blue-500">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-2">
-                        <div className="flex items-center space-x-2">
-                          <h3 className="text-lg font-semibold">{branch.name}</h3>
-                          <Badge variant="outline">{branch.id}</Badge>
+  return (
+    <div className="space-y-8 p-6 bg-gradient-to-br from-slate-50 via-white to-blue-50 min-h-screen">
+      <div className="flex justify-between items-center">
+        <div className="space-y-2">
+          <h2 className="text-4xl font-bold bg-gradient-to-r from-slate-900 via-blue-800 to-slate-900 bg-clip-text text-transparent">
+            {userRole === 'superadmin' ? 'System Administration' : 'Staff Management'}
+          </h2>
+          <p className="text-slate-600 text-lg">
+            {userRole === 'superadmin' ? 'Manage branches and system-wide settings' : 'Manage your clinic staff and roles'}
+          </p>
+        </div>
+        <Badge 
+          variant="outline" 
+          className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 text-blue-800"
+        >
+          {userRole === 'superadmin' ? 'Super Administrator' : 'Administrator'}
+        </Badge>
+      </div>
+
+      <Tabs defaultValue={userRole === 'superadmin' ? 'branches' : 'staff'} className="space-y-8">
+        {getTabsList()}
+
+        {/* Branches Tab - Only for Super Admin */}
+        {userRole === 'superadmin' && (
+          <TabsContent value="branches" className="space-y-6">
+            <Card className="border-0 shadow-xl bg-white/70 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-t-lg">
+                <CardTitle className="flex items-center space-x-3 text-xl">
+                  <Building className="h-6 w-6" />
+                  <span>Branch Network</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 space-y-6">
+                {branches.map((branch) => (
+                  <Card key={branch.id} className="border-l-4 border-l-blue-500 hover:shadow-lg transition-all duration-300 bg-gradient-to-r from-white to-blue-50/30">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-3">
+                          <div className="flex items-center space-x-3">
+                            <h3 className="text-xl font-bold text-slate-800">{branch.name}</h3>
+                            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                              {branch.id}
+                            </Badge>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-slate-600">
+                            <div className="flex items-center space-x-2">
+                              <MapPin className="h-4 w-4 text-blue-500" />
+                              <span>{branch.address}</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Phone className="h-4 w-4 text-green-500" />
+                              <span>{branch.phone}</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Mail className="h-4 w-4 text-purple-500" />
+                              <span>{branch.email}</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Users className="h-4 w-4 text-orange-500" />
+                              <span>Manager: {branch.manager}</span>
+                            </div>
+                          </div>
+                          <div className="flex space-x-4">
+                            <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-200">
+                              {branch.staff} Staff Members
+                            </Badge>
+                            <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200">
+                              {branch.patients} Patients
+                            </Badge>
+                          </div>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
-                          <div className="flex items-center space-x-1">
-                            <MapPin className="h-3 w-3" />
-                            <span>{branch.address}</span>
-                          </div>
-                          <div className="flex items-center space-x-1">
-                            <Phone className="h-3 w-3" />
-                            <span>{branch.phone}</span>
-                          </div>
-                          <div className="flex items-center space-x-1">
-                            <Mail className="h-3 w-3" />
-                            <span>{branch.email}</span>
-                          </div>
-                          <div className="flex items-center space-x-1">
-                            <Users className="h-3 w-3" />
-                            <span>Manager: {branch.manager}</span>
-                          </div>
-                        </div>
-                        <div className="flex space-x-4">
-                          <Badge variant="secondary">{branch.staff} Staff</Badge>
-                          <Badge variant="secondary">{branch.patients} Patients</Badge>
-                        </div>
-                      </div>
-                      <div className="flex space-x-2">
-                        <Button size="sm" variant="outline">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        {userRole === 'superadmin' && (
-                          <Button size="sm" variant="outline" className="text-red-600">
+                        <div className="flex space-x-2">
+                          <Button size="sm" variant="outline" className="hover:bg-blue-50 hover:border-blue-300">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="outline" className="text-red-600 hover:bg-red-50 hover:border-red-300">
                             <Trash2 className="h-4 w-4" />
                           </Button>
-                        )}
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </CardContent>
-          </Card>
-        </TabsContent>
+                    </CardContent>
+                  </Card>
+                ))}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
 
         {/* Staff Management Tab */}
         <TabsContent value="staff" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Users className="h-5 w-5" />
-                <span>Staff Directory</span>
+          <Card className="border-0 shadow-xl bg-white/70 backdrop-blur-sm">
+            <CardHeader className="bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-t-lg">
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <Users className="h-6 w-6" />
+                  <span className="text-xl">Staff Directory</span>
+                </div>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/70" />
+                  <Input
+                    placeholder="Search staff..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 bg-white/20 border-white/30 text-white placeholder:text-white/70 w-64"
+                  />
+                </div>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {staff.map((member) => (
-                <Card key={member.id} className="border-l-4 border-l-green-500">
-                  <CardContent className="p-4">
+            <CardContent className="p-6 space-y-4">
+              {filteredStaff.map((member) => (
+                <Card key={member.id} className="border-l-4 border-l-emerald-500 hover:shadow-lg transition-all duration-300 bg-gradient-to-r from-white to-emerald-50/30">
+                  <CardContent className="p-6">
                     <div className="flex items-center justify-between">
-                      <div className="space-y-2">
-                        <div className="flex items-center space-x-2">
-                          <h3 className="text-lg font-semibold">{member.name}</h3>
-                          <Badge className={getRoleColor(member.role)}>
-                            {member.role}
+                      <div className="space-y-3">
+                        <div className="flex items-center space-x-3">
+                          <h3 className="text-xl font-bold text-slate-800">{member.name}</h3>
+                          <Badge className={`${getRoleColor(member.role)} text-white px-3 py-1 rounded-full`}>
+                            {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
                           </Badge>
-                          <Badge variant="outline">{member.id}</Badge>
+                          <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200">
+                            {member.id}
+                          </Badge>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
-                          <div className="flex items-center space-x-1">
-                            <Mail className="h-3 w-3" />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-slate-600">
+                          <div className="flex items-center space-x-2">
+                            <Mail className="h-4 w-4 text-blue-500" />
                             <span>{member.email}</span>
                           </div>
-                          <div className="flex items-center space-x-1">
-                            <Phone className="h-3 w-3" />
+                          <div className="flex items-center space-x-2">
+                            <Phone className="h-4 w-4 text-green-500" />
                             <span>{member.phone}</span>
                           </div>
-                          <div className="flex items-center space-x-1">
-                            <Building className="h-3 w-3" />
+                          <div className="flex items-center space-x-2">
+                            <Building className="h-4 w-4 text-purple-500" />
                             <span>{member.branch}</span>
                           </div>
                           {member.role === 'doctor' && (
-                            <div>
-                              <span>{member.speciality} • ₹{member.consultationFee}</span>
+                            <div className="flex items-center space-x-2">
+                              <span className="font-medium">{member.speciality}</span>
+                              <span className="text-green-600 font-semibold">₹{member.consultationFee}</span>
                             </div>
                           )}
                         </div>
                       </div>
                       <div className="flex space-x-2">
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" variant="outline" className="hover:bg-blue-50 hover:border-blue-300">
                           <Edit className="h-4 w-4" />
                         </Button>
                         {userRole === 'superadmin' && (
-                          <Button size="sm" variant="outline" className="text-red-600">
+                          <Button size="sm" variant="outline" className="text-red-600 hover:bg-red-50 hover:border-red-300">
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         )}
@@ -336,230 +398,235 @@ const AdminManagement = ({ userRole }: AdminManagementProps) => {
 
         {/* Create New Tab */}
         <TabsContent value="create" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Create Branch */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Building className="h-5 w-5" />
-                  <span>Create New Branch</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleCreateBranch} className="space-y-4">
-                  <div>
-                    <Label htmlFor="branchName">Branch Name *</Label>
-                    <Input
-                      id="branchName"
-                      value={branchForm.name}
-                      onChange={(e) => setBranchForm({...branchForm, name: e.target.value})}
-                      placeholder="Enter branch name"
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="branchAddress">Address *</Label>
-                    <Input
-                      id="branchAddress"
-                      value={branchForm.address}
-                      onChange={(e) => setBranchForm({...branchForm, address: e.target.value})}
-                      placeholder="Enter complete address"
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="branchPhone">Phone Number *</Label>
-                    <Input
-                      id="branchPhone"
-                      type="tel"
-                      value={branchForm.phone}
-                      onChange={(e) => setBranchForm({...branchForm, phone: e.target.value})}
-                      placeholder="+91 XXXXX XXXXX"
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="branchEmail">Email</Label>
-                    <Input
-                      id="branchEmail"
-                      type="email"
-                      value={branchForm.email}
-                      onChange={(e) => setBranchForm({...branchForm, email: e.target.value})}
-                      placeholder="branch@clinic.com"
-                      className="mt-1"
-                    />
-                  </div>
-                  
-                  {/* Admin Login Credentials */}
-                  <div className="border-t pt-4">
-                    <div className="flex items-center space-x-2 mb-3">
-                      <Key className="h-4 w-4" />
-                      <Label className="text-sm font-medium">Branch Admin Login (Optional)</Label>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Create Branch - Only for Super Admin */}
+            {userRole === 'superadmin' && (
+              <Card className="border-0 shadow-xl bg-white/70 backdrop-blur-sm">
+                <CardHeader className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-t-lg">
+                  <CardTitle className="flex items-center space-x-3 text-xl">
+                    <Building className="h-6 w-6" />
+                    <span>Create New Branch</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <form onSubmit={handleCreateBranch} className="space-y-5">
+                    <div className="space-y-2">
+                      <Label htmlFor="branchName" className="text-sm font-semibold text-slate-700">Branch Name *</Label>
+                      <Input
+                        id="branchName"
+                        value={branchForm.name}
+                        onChange={(e) => setBranchForm({...branchForm, name: e.target.value})}
+                        placeholder="Enter branch name"
+                        className="border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                      />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="adminUsername">Username</Label>
-                        <Input
-                          id="adminUsername"
-                          value={branchForm.adminUsername}
-                          onChange={(e) => setBranchForm({...branchForm, adminUsername: e.target.value})}
-                          placeholder="admin_username"
-                          className="mt-1"
-                        />
+                    <div className="space-y-2">
+                      <Label htmlFor="branchAddress" className="text-sm font-semibold text-slate-700">Address *</Label>
+                      <Input
+                        id="branchAddress"
+                        value={branchForm.address}
+                        onChange={(e) => setBranchForm({...branchForm, address: e.target.value})}
+                        placeholder="Enter complete address"
+                        className="border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="branchPhone" className="text-sm font-semibold text-slate-700">Phone Number *</Label>
+                      <Input
+                        id="branchPhone"
+                        type="tel"
+                        value={branchForm.phone}
+                        onChange={(e) => setBranchForm({...branchForm, phone: e.target.value})}
+                        placeholder="+91 XXXXX XXXXX"
+                        className="border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="branchEmail" className="text-sm font-semibold text-slate-700">Email</Label>
+                      <Input
+                        id="branchEmail"
+                        type="email"
+                        value={branchForm.email}
+                        onChange={(e) => setBranchForm({...branchForm, email: e.target.value})}
+                        placeholder="branch@clinic.com"
+                        className="border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                      />
+                    </div>
+                    
+                    <div className="border-t border-slate-200 pt-5">
+                      <div className="flex items-center space-x-2 mb-4">
+                        <Key className="h-5 w-5 text-blue-600" />
+                        <Label className="text-sm font-semibold text-slate-700">Branch Admin Login Credentials</Label>
                       </div>
-                      <div>
-                        <Label htmlFor="adminPassword">Password</Label>
-                        <Input
-                          id="adminPassword"
-                          type="password"
-                          value={branchForm.adminPassword}
-                          onChange={(e) => setBranchForm({...branchForm, adminPassword: e.target.value})}
-                          placeholder="password123"
-                          className="mt-1"
-                        />
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="adminUsername" className="text-sm font-medium text-slate-600">Username</Label>
+                          <Input
+                            id="adminUsername"
+                            value={branchForm.adminUsername}
+                            onChange={(e) => setBranchForm({...branchForm, adminUsername: e.target.value})}
+                            placeholder="admin_username"
+                            className="border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="adminPassword" className="text-sm font-medium text-slate-600">Password</Label>
+                          <Input
+                            id="adminPassword"
+                            type="password"
+                            value={branchForm.adminPassword}
+                            onChange={(e) => setBranchForm({...branchForm, adminPassword: e.target.value})}
+                            placeholder="password123"
+                            className="border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
-                    <Building className="h-4 w-4 mr-2" />
-                    Create Branch
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
+                    <Button type="submit" className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 rounded-lg shadow-lg">
+                      <Building className="h-5 w-5 mr-2" />
+                      Create Branch
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Create Staff */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <UserPlus className="h-5 w-5" />
-                  <span>Add New Staff</span>
+            <Card className={`border-0 shadow-xl bg-white/70 backdrop-blur-sm ${userRole === 'admin' ? 'lg:col-span-2' : ''}`}>
+              <CardHeader className="bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-t-lg">
+                <CardTitle className="flex items-center space-x-3 text-xl">
+                  <UserPlus className="h-6 w-6" />
+                  <span>Add New Staff Member</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <form onSubmit={handleCreateStaff} className="space-y-4">
-                  <div>
-                    <Label htmlFor="staffName">Full Name *</Label>
-                    <Input
-                      id="staffName"
-                      value={staffForm.name}
-                      onChange={(e) => setStaffForm({...staffForm, name: e.target.value})}
-                      placeholder="Enter full name"
-                      className="mt-1"
-                    />
+              <CardContent className="p-6">
+                <form onSubmit={handleCreateStaff} className="space-y-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="space-y-2">
+                      <Label htmlFor="staffName" className="text-sm font-semibold text-slate-700">Full Name *</Label>
+                      <Input
+                        id="staffName"
+                        value={staffForm.name}
+                        onChange={(e) => setStaffForm({...staffForm, name: e.target.value})}
+                        placeholder="Enter full name"
+                        className="border-slate-300 focus:border-emerald-500 focus:ring-emerald-500"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="staffEmail" className="text-sm font-semibold text-slate-700">Email *</Label>
+                      <Input
+                        id="staffEmail"
+                        type="email"
+                        value={staffForm.email}
+                        onChange={(e) => setStaffForm({...staffForm, email: e.target.value})}
+                        placeholder="staff@clinic.com"
+                        className="border-slate-300 focus:border-emerald-500 focus:ring-emerald-500"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <Label htmlFor="staffEmail">Email *</Label>
-                    <Input
-                      id="staffEmail"
-                      type="email"
-                      value={staffForm.email}
-                      onChange={(e) => setStaffForm({...staffForm, email: e.target.value})}
-                      placeholder="staff@clinic.com"
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="staffPhone">Phone Number</Label>
-                    <Input
-                      id="staffPhone"
-                      type="tel"
-                      value={staffForm.phone}
-                      onChange={(e) => setStaffForm({...staffForm, phone: e.target.value})}
-                      placeholder="+91 XXXXX XXXXX"
-                      className="mt-1"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="staffRole">Role *</Label>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="space-y-2">
+                      <Label htmlFor="staffPhone" className="text-sm font-semibold text-slate-700">Phone Number</Label>
+                      <Input
+                        id="staffPhone"
+                        type="tel"
+                        value={staffForm.phone}
+                        onChange={(e) => setStaffForm({...staffForm, phone: e.target.value})}
+                        placeholder="+91 XXXXX XXXXX"
+                        className="border-slate-300 focus:border-emerald-500 focus:ring-emerald-500"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="staffRole" className="text-sm font-semibold text-slate-700">Role *</Label>
                       <Select value={staffForm.role} onValueChange={(value) => setStaffForm({...staffForm, role: value})}>
-                        <SelectTrigger className="mt-1">
+                        <SelectTrigger className="border-slate-300 focus:border-emerald-500 focus:ring-emerald-500">
                           <SelectValue placeholder="Select role" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="bg-white">
                           <SelectItem value="doctor">Doctor</SelectItem>
                           <SelectItem value="receptionist">Receptionist</SelectItem>
-                          <SelectItem value="admin">Admin</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="staffBranch">Branch *</Label>
-                      <Select value={staffForm.branch} onValueChange={(value) => setStaffForm({...staffForm, branch: value})}>
-                        <SelectTrigger className="mt-1">
-                          <SelectValue placeholder="Select branch" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {branches.map((branch) => (
-                            <SelectItem key={branch.id} value={branch.name}>
-                              {branch.name}
-                            </SelectItem>
-                          ))}
+                          {userRole === 'superadmin' && <SelectItem value="admin">Admin</SelectItem>}
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="staffBranch" className="text-sm font-semibold text-slate-700">Branch *</Label>
+                    <Select value={staffForm.branch} onValueChange={(value) => setStaffForm({...staffForm, branch: value})}>
+                      <SelectTrigger className="border-slate-300 focus:border-emerald-500 focus:ring-emerald-500">
+                        <SelectValue placeholder="Select branch" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white">
+                        {branches.map((branch) => (
+                          <SelectItem key={branch.id} value={branch.name}>
+                            {branch.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
                   {staffForm.role === 'doctor' && (
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="speciality">Speciality</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      <div className="space-y-2">
+                        <Label htmlFor="speciality" className="text-sm font-semibold text-slate-700">Speciality</Label>
                         <Input
                           id="speciality"
                           value={staffForm.speciality}
                           onChange={(e) => setStaffForm({...staffForm, speciality: e.target.value})}
                           placeholder="e.g., General Medicine"
-                          className="mt-1"
+                          className="border-slate-300 focus:border-emerald-500 focus:ring-emerald-500"
                         />
                       </div>
-                      <div>
-                        <Label htmlFor="consultationFee">Consultation Fee (₹)</Label>
+                      <div className="space-y-2">
+                        <Label htmlFor="consultationFee" className="text-sm font-semibold text-slate-700">Consultation Fee (₹)</Label>
                         <Input
                           id="consultationFee"
                           type="number"
                           value={staffForm.consultationFee}
                           onChange={(e) => setStaffForm({...staffForm, consultationFee: e.target.value})}
                           placeholder="500"
-                          className="mt-1"
+                          className="border-slate-300 focus:border-emerald-500 focus:ring-emerald-500"
                         />
                       </div>
                     </div>
                   )}
                   
-                  {/* Staff Login Credentials */}
-                  <div className="border-t pt-4">
-                    <div className="flex items-center space-x-2 mb-3">
-                      <Key className="h-4 w-4" />
-                      <Label className="text-sm font-medium">Login Credentials (Optional)</Label>
+                  <div className="border-t border-slate-200 pt-5">
+                    <div className="flex items-center space-x-2 mb-4">
+                      <Key className="h-5 w-5 text-emerald-600" />
+                      <Label className="text-sm font-semibold text-slate-700">Login Credentials</Label>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="staffUsername">Username</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      <div className="space-y-2">
+                        <Label htmlFor="staffUsername" className="text-sm font-medium text-slate-600">Username</Label>
                         <Input
                           id="staffUsername"
                           value={staffForm.username}
                           onChange={(e) => setStaffForm({...staffForm, username: e.target.value})}
                           placeholder="staff_username"
-                          className="mt-1"
+                          className="border-slate-300 focus:border-emerald-500 focus:ring-emerald-500"
                         />
                       </div>
-                      <div>
-                        <Label htmlFor="staffPassword">Password</Label>
+                      <div className="space-y-2">
+                        <Label htmlFor="staffPassword" className="text-sm font-medium text-slate-600">Password</Label>
                         <Input
                           id="staffPassword"
                           type="password"
                           value={staffForm.password}
                           onChange={(e) => setStaffForm({...staffForm, password: e.target.value})}
                           placeholder="password123"
-                          className="mt-1"
+                          className="border-slate-300 focus:border-emerald-500 focus:ring-emerald-500"
                         />
                       </div>
                     </div>
                   </div>
 
-                  <Button type="submit" className="w-full bg-green-600 hover:bg-green-700">
-                    <UserPlus className="h-4 w-4 mr-2" />
+                  <Button type="submit" className="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-semibold py-3 rounded-lg shadow-lg">
+                    <UserPlus className="h-5 w-5 mr-2" />
                     Add Staff Member
                   </Button>
                 </form>
