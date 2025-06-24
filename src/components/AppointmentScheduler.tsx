@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, User, AlertTriangle, CheckCircle, MessageSquare } from "lucide-react";
+import { Calendar, Clock, User, AlertTriangle, CheckCircle, MessageSquare, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const AppointmentScheduler = () => {
@@ -16,7 +16,7 @@ const AppointmentScheduler = () => {
   const [selectedTime, setSelectedTime] = useState("");
   const [selectedDoctor, setSelectedDoctor] = useState("");
   const [selectedPatient, setSelectedPatient] = useState("");
-  const [isChronicCondition, setIsChronicCondition] = useState(false);
+  const [isHipaaRegulation, setIsHipaaRegulation] = useState(false);
   const [appointmentType, setAppointmentType] = useState("");
 
   // Mock data
@@ -74,7 +74,7 @@ const AppointmentScheduler = () => {
       doctor: selectedDoc?.name,
       date: selectedDate,
       time: selectedTime,
-      isChronicCondition,
+      isHipaaRegulation,
       appointmentType
     });
 
@@ -88,7 +88,7 @@ const AppointmentScheduler = () => {
     setSelectedTime("");
     setSelectedDoctor("");
     setSelectedPatient("");
-    setIsChronicCondition(false);
+    setIsHipaaRegulation(false);
     setAppointmentType("");
   };
 
@@ -232,26 +232,26 @@ const AppointmentScheduler = () => {
                 </Select>
               </div>
 
-              {/* Chronic Condition Checkbox */}
-              <div className="flex items-center space-x-2 p-4 bg-orange-50 rounded-lg border border-orange-200">
+              {/* HIPAA Regulations Checkbox */}
+              <div className="flex items-center space-x-2 p-4 bg-blue-50 rounded-lg border border-blue-200">
                 <Checkbox
-                  id="chronicCondition"
-                  checked={isChronicCondition}
+                  id="hipaaRegulation"
+                  checked={isHipaaRegulation}
                   onCheckedChange={(checked) => {
                     if (typeof checked === 'boolean') {
-                      setIsChronicCondition(checked);
+                      setIsHipaaRegulation(checked);
                     }
                   }}
                 />
                 <div className="flex flex-col">
-                  <Label htmlFor="chronicCondition" className="text-orange-800 font-medium">
-                    Mark as Chronic Condition
+                  <Label htmlFor="hipaaRegulation" className="text-blue-800 font-medium">
+                    Mark as HIPAA Regulation Case
                   </Label>
-                  <p className="text-xs text-orange-600">
-                    This will alert the doctor during consultation
+                  <p className="text-xs text-blue-600">
+                    This will alert the doctor during consultation about privacy regulations
                   </p>
                 </div>
-                <AlertTriangle className="h-5 w-5 text-orange-600 ml-auto" />
+                <Shield className="h-5 w-5 text-blue-600 ml-auto" />
               </div>
 
               <div className="flex justify-end space-x-4 pt-4">

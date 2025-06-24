@@ -4,21 +4,44 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Calendar, FileText, IndianRupee, UserPlus, Clock, Activity, TrendingUp } from "lucide-react";
+import { Users, Calendar, FileText, IndianRupee, UserPlus, Clock, Activity, TrendingUp, LogOut, Settings } from "lucide-react";
 import PatientRegistration from "@/components/PatientRegistration";
 import AppointmentScheduler from "@/components/AppointmentScheduler";
 import DoctorDashboard from "@/components/DoctorDashboard";
 import BillingModule from "@/components/BillingModule";
 import AdminReports from "@/components/AdminReports";
+import AdminManagement from "@/components/AdminManagement";
+import LoginDashboard from "@/components/LoginDashboard";
 
 const Index = () => {
-  const [activeRole, setActiveRole] = useState<'admin' | 'doctor' | 'receptionist'>('receptionist');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [activeRole, setActiveRole] = useState<'admin' | 'doctor' | 'receptionist' | 'superadmin'>('receptionist');
   const [activeModule, setActiveModule] = useState('dashboard');
 
+  const handleLogin = (role: 'admin' | 'doctor' | 'receptionist' | 'superadmin', userData: any) => {
+    setActiveRole(role);
+    setCurrentUser(userData);
+    setIsLoggedIn(true);
+    setActiveModule('dashboard');
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setCurrentUser(null);
+    setActiveRole('receptionist');
+    setActiveModule('dashboard');
+  };
+
+  if (!isLoggedIn) {
+    return <LoginDashboard onLogin={handleLogin} />;
+  }
+
   const roleColors = {
+    superadmin: 'bg-purple-500',
     admin: 'bg-blue-500',
     doctor: 'bg-green-500',
-    receptionist: 'bg-purple-500'
+    receptionist: 'bg-orange-500'
   };
 
   const todayStats = {
@@ -26,6 +49,31 @@ const Index = () => {
     appointments: 18,
     revenue: 12500,
     pending: 6
+  };
+
+  const getAvailableTabs = () => {
+    const baseTabs = [
+      { value: "dashboard", label: "Dashboard", icon: Activity },
+      { value: "patients", label: "Patients", icon: Users },
+      { value: "appointments", label: "Appointments", icon: Calendar }
+    ];
+
+    if (activeRole === 'doctor') {
+      baseTabs.push({ value: "consultation", label: "Consultation", icon: FileText });
+    }
+
+    if (activeRole !== 'doctor') {
+      baseTabs.push({ value: "billing", label: "Billing", icon: IndianRupee });
+    }
+
+    if (activeRole === 'admin' || activeRole === 'superadmin') {
+      baseTabs.push(
+        { value: "reports", label: "Reports", icon: TrendingUp },
+        { value: "management", label: "Management", icon: Settings }
+      );
+    }
+
+    return baseTabs;
   };
 
   return (
@@ -43,19 +91,16 @@ const Index = () => {
             </div>
             
             <div className="flex items-center space-x-4">
-              <div className="flex space-x-2">
-                {(['receptionist', 'doctor', 'admin'] as const).map((role) => (
-                  <Button
-                    key={role}
-                    variant={activeRole === role ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setActiveRole(role)}
-                    className={activeRole === role ? roleColors[role] : ''}
-                  >
-                    {role.charAt(0).toUpperCase() + role.slice(1)}
-                  </Button>
-                ))}
+              <div className="flex items-center space-x-2">
+                <Badge className={`${roleColors[activeRole]} text-white`}>
+                  {activeRole.charAt(0).toUpperCase() + activeRole.slice(1)}
+                </Badge>
+                <span className="text-sm font-medium">{currentUser?.name}</span>
               </div>
+              <Button variant="outline" size="sm" onClick={handleLogout}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
             </div>
           </div>
         </div>
@@ -64,35 +109,13 @@ const Index = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs value={activeModule} onValueChange={setActiveModule} className="space-y-6">
           {/* Navigation Tabs */}
-          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-flex">
-            <TabsTrigger value="dashboard" className="flex items-center space-x-2">
-              <Activity className="h-4 w-4" />
-              <span className="hidden sm:inline">Dashboard</span>
-            </TabsTrigger>
-            <TabsTrigger value="patients" className="flex items-center space-x-2">
-              <Users className="h-4 w-4" />
-              <span className="hidden sm:inline">Patients</span>
-            </TabsTrigger>
-            <TabsTrigger value="appointments" className="flex items-center space-x-2">
-              <Calendar className="h-4 w-4" />
-              <span className="hidden sm:inline">Appointments</span>
-            </TabsTrigger>
-            {activeRole === 'doctor' && (
-              <TabsTrigger value="consultation" className="flex items-center space-x-2">
-                <FileText className="h-4 w-4" />
-                <span className="hidden sm:inline">Consultation</span>
+          <TabsList className="grid w-full lg:w-auto lg:inline-flex" style={{ gridTemplateColumns: `repeat(${getAvailableTabs().length}, 1fr)` }}>
+            {getAvailableTabs().map((tab) => (
+              <TabsTrigger key={tab.value} value={tab.value} className="flex items-center space-x-2">
+                <tab.icon className="h-4 w-4" />
+                <span className="hidden sm:inline">{tab.label}</span>
               </TabsTrigger>
-            )}
-            <TabsTrigger value="billing" className="flex items-center space-x-2">
-              <IndianRupee className="h-4 w-4" />
-              <span className="hidden sm:inline">Billing</span>
-            </TabsTrigger>
-            {activeRole === 'admin' && (
-              <TabsTrigger value="reports" className="flex items-center space-x-2">
-                <TrendingUp className="h-4 w-4" />
-                <span className="hidden sm:inline">Reports</span>
-              </TabsTrigger>
-            )}
+            ))}
           </TabsList>
 
           {/* Dashboard Overview */}
@@ -128,16 +151,18 @@ const Index = () => {
                 </CardContent>
               </Card>
 
-              <Card className="hover:shadow-lg transition-shadow">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Revenue</CardTitle>
-                  <IndianRupee className="h-4 w-4 text-purple-600" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">₹{todayStats.revenue.toLocaleString()}</div>
-                  <p className="text-xs text-muted-foreground">Today's collection</p>
-                </CardContent>
-              </Card>
+              {activeRole !== 'doctor' && (
+                <Card className="hover:shadow-lg transition-shadow">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Revenue</CardTitle>
+                    <IndianRupee className="h-4 w-4 text-purple-600" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">₹{todayStats.revenue.toLocaleString()}</div>
+                    <p className="text-xs text-muted-foreground">Today's collection</p>
+                  </CardContent>
+                </Card>
+              )}
 
               <Card className="hover:shadow-lg transition-shadow">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -184,14 +209,16 @@ const Index = () => {
                       <span>Consultation</span>
                     </Button>
                   )}
-                  <Button 
-                    className="h-20 flex flex-col space-y-2" 
-                    variant="outline"
-                    onClick={() => setActiveModule('billing')}
-                  >
-                    <IndianRupee className="h-6 w-6" />
-                    <span>Create Bill</span>
-                  </Button>
+                  {activeRole !== 'doctor' && (
+                    <Button 
+                      className="h-20 flex flex-col space-y-2" 
+                      variant="outline"
+                      onClick={() => setActiveModule('billing')}
+                    >
+                      <IndianRupee className="h-6 w-6" />
+                      <span>Create Bill</span>
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -215,14 +242,23 @@ const Index = () => {
           )}
 
           {/* Billing Module */}
-          <TabsContent value="billing">
-            <BillingModule userRole={activeRole} />
-          </TabsContent>
+          {activeRole !== 'doctor' && (
+            <TabsContent value="billing">
+              <BillingModule userRole={activeRole} />
+            </TabsContent>
+          )}
 
           {/* Admin Reports */}
-          {activeRole === 'admin' && (
+          {(activeRole === 'admin' || activeRole === 'superadmin') && (
             <TabsContent value="reports">
               <AdminReports />
+            </TabsContent>
+          )}
+
+          {/* Admin Management */}
+          {(activeRole === 'admin' || activeRole === 'superadmin') && (
+            <TabsContent value="management">
+              <AdminManagement userRole={activeRole} />
             </TabsContent>
           )}
         </Tabs>

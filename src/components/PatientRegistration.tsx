@@ -7,16 +7,18 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Search, UserPlus, QrCode, Phone, Calendar, MapPin } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Search, UserPlus, QrCode, Phone, Calendar, MapPin, Eye, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const PatientRegistration = () => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedPatient, setSelectedPatient] = useState(null);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
-    dateOfBirth: "",
+    age: "",
     gender: "",
     phone: "",
     email: "",
@@ -26,19 +28,7 @@ const PatientRegistration = () => {
     parentGuardianPhone: ""
   });
 
-  const calculateAge = (dob: string) => {
-    if (!dob) return 0;
-    const today = new Date();
-    const birthDate = new Date(dob);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    return age;
-  };
-
-  const currentAge = calculateAge(formData.dateOfBirth);
+  const currentAge = parseInt(formData.age) || 0;
   const requiresGuardian = currentAge < 20 && currentAge > 0;
 
   const generatePatientId = () => {
@@ -71,7 +61,7 @@ const PatientRegistration = () => {
     setFormData({
       firstName: "",
       lastName: "",
-      dateOfBirth: "",
+      age: "",
       gender: "",
       phone: "",
       email: "",
@@ -84,15 +74,132 @@ const PatientRegistration = () => {
 
   // Mock existing patients for search
   const existingPatients = [
-    { id: "PAT123456", name: "Rajesh Kumar", phone: "+91 9876543210", age: 45, lastVisit: "2024-01-15" },
-    { id: "PAT123457", name: "Priya Sharma", phone: "+91 9876543211", age: 32, lastVisit: "2024-01-10" },
-    { id: "PAT123458", name: "Amit Patel", phone: "+91 9876543212", age: 28, lastVisit: "2024-01-08" },
+    { 
+      id: "PAT123456", 
+      name: "Rajesh Kumar", 
+      phone: "+91 9876543210", 
+      age: 45, 
+      lastVisit: "2024-01-15",
+      gender: "Male",
+      address: "123 Main Street, Mumbai",
+      emergencyContact: "+91 9876543220",
+      totalVisits: 5,
+      lastDiagnosis: "Hypertension Follow-up"
+    },
+    { 
+      id: "PAT123457", 
+      name: "Priya Sharma", 
+      phone: "+91 9876543211", 
+      age: 32, 
+      lastVisit: "2024-01-10",
+      gender: "Female",
+      address: "456 Park Avenue, Delhi",
+      emergencyContact: "+91 9876543221",
+      totalVisits: 3,
+      lastDiagnosis: "Common Cold"
+    },
+    { 
+      id: "PAT123458", 
+      name: "Amit Patel", 
+      phone: "+91 9876543212", 
+      age: 28, 
+      lastVisit: "2024-01-08",
+      gender: "Male",
+      address: "789 Garden Road, Pune",
+      emergencyContact: "+91 9876543222",
+      totalVisits: 7,
+      lastDiagnosis: "Diabetes Management"
+    },
   ];
 
   const filteredPatients = existingPatients.filter(patient =>
     patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     patient.phone.includes(searchTerm) ||
     patient.id.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const PatientProfileDialog = ({ patient }) => (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button size="sm" onClick={() => setSelectedPatient(patient)}>
+          <Eye className="h-4 w-4 mr-1" />
+          View Profile
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center space-x-2">
+            <User className="h-5 w-5" />
+            <span>Patient Profile - {patient?.name}</span>
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-6">
+          {/* Basic Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Basic Information</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm font-medium text-gray-600">Patient ID</Label>
+                <p className="font-semibold">{patient?.id}</p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-gray-600">Name</Label>
+                <p className="font-semibold">{patient?.name}</p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-gray-600">Age</Label>
+                <p className="font-semibold">{patient?.age} years</p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-gray-600">Gender</Label>
+                <p className="font-semibold">{patient?.gender}</p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-gray-600">Phone</Label>
+                <p className="font-semibold">{patient?.phone}</p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-gray-600">Emergency Contact</Label>
+                <p className="font-semibold">{patient?.emergencyContact}</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Medical Summary */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Medical Summary</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm font-medium text-gray-600">Total Visits</Label>
+                <p className="font-semibold">{patient?.totalVisits}</p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-gray-600">Last Visit</Label>
+                <p className="font-semibold">{patient?.lastVisit}</p>
+              </div>
+              <div className="col-span-2">
+                <Label className="text-sm font-medium text-gray-600">Last Diagnosis</Label>
+                <p className="font-semibold">{patient?.lastDiagnosis}</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Address */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Address</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>{patient?.address}</p>
+            </CardContent>
+          </Card>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 
   return (
@@ -143,7 +250,7 @@ const PatientRegistration = () => {
               {/* Search Results */}
               <div className="space-y-3">
                 {filteredPatients.map((patient) => (
-                  <Card key={patient.id} className="hover:shadow-md transition-shadow cursor-pointer">
+                  <Card key={patient.id} className="hover:shadow-md transition-shadow">
                     <CardContent className="flex items-center justify-between p-4">
                       <div className="flex items-center space-x-4">
                         <div className="flex flex-col">
@@ -165,7 +272,7 @@ const PatientRegistration = () => {
                       </div>
                       <div className="flex items-center space-x-2">
                         <Badge variant="secondary">{patient.id}</Badge>
-                        <Button size="sm">View Profile</Button>
+                        <PatientProfileDialog patient={patient} />
                       </div>
                     </CardContent>
                   </Card>
@@ -219,18 +326,18 @@ const PatientRegistration = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <Label htmlFor="dateOfBirth">Date of Birth *</Label>
+                    <Label htmlFor="age">Age *</Label>
                     <Input
-                      id="dateOfBirth"
-                      type="date"
-                      value={formData.dateOfBirth}
-                      onChange={(e) => setFormData({...formData, dateOfBirth: e.target.value})}
+                      id="age"
+                      type="number"
+                      min="0"
+                      max="120"
+                      value={formData.age}
+                      onChange={(e) => setFormData({...formData, age: e.target.value})}
                       required
                       className="mt-1"
+                      placeholder="Enter age in years"
                     />
-                    {currentAge > 0 && (
-                      <p className="text-sm text-gray-500 mt-1">Age: {currentAge} years</p>
-                    )}
                   </div>
                   <div>
                     <Label htmlFor="gender">Gender *</Label>

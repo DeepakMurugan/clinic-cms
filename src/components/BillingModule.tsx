@@ -7,11 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { IndianRupee, CreditCard, Smartphone, Banknote, Download, Send, Plus, Trash2 } from "lucide-react";
+import { IndianRupee, CreditCard, Smartphone, Banknote, Download, Send, Plus, Trash2, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface BillingModuleProps {
-  userRole: 'admin' | 'doctor' | 'receptionist';
+  userRole: 'admin' | 'doctor' | 'receptionist' | 'superadmin';
 }
 
 const BillingModule = ({ userRole }: BillingModuleProps) => {
@@ -52,6 +52,33 @@ const BillingModule = ({ userRole }: BillingModuleProps) => {
     { id: "INV002", patient: "Priya Sharma", amount: 630, date: "2024-01-15", status: "pending" },
     { id: "INV003", patient: "Amit Patel", amount: 450, date: "2024-01-14", status: "paid" },
   ];
+
+  // Check if user has access to billing
+  const hasAccess = userRole !== 'doctor';
+  const canEdit = userRole === 'admin' || userRole === 'superadmin';
+  const canDelete = userRole === 'admin' || userRole === 'superadmin';
+
+  if (!hasAccess) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-3xl font-bold text-gray-900">Billing & Invoicing</h2>
+          <Badge variant="destructive">Access Restricted</Badge>
+        </div>
+        
+        <Card>
+          <CardContent className="flex items-center justify-center h-96">
+            <div className="text-center text-gray-500">
+              <Lock className="h-16 w-16 mx-auto mb-4 opacity-50" />
+              <h3 className="text-xl font-semibold mb-2">Access Denied</h3>
+              <p>Doctors do not have access to the billing module.</p>
+              <p className="text-sm mt-2">Billing is handled automatically after consultation completion.</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const calculateSubtotal = () => {
     const itemsTotal = additionalItems.reduce((sum, item) => sum + item.amount, 0);
@@ -123,9 +150,6 @@ const BillingModule = ({ userRole }: BillingModuleProps) => {
     setPaymentMethod("");
     setConsultationFee(500);
   };
-
-  const canEdit = userRole === 'admin';
-  const canDelete = userRole === 'admin';
 
   return (
     <div className="space-y-6">
