@@ -36,3 +36,26 @@ check here : https://github.com/DeepakMurugan/clinic-cms/
 
 ## 📂 Project Structure
 
+cms/
+├── client/ # Frontend (React + Vite)
+├── server/ # Backend (Node.js + MongoDB)
+├── public/ # Static files
+└── README.md # You’re here!
+
+👨‍💻 Author
+Deepak Murugan
+Front-End Developer | MERN Stack Enthusiast
+📧 deepakmurugandev@gmail.com
+
+
+💡 Future Improvements : Planning to add
+
+✅ Razorpay/UPI Billing Integration
+
+✅ Firebase-based Push Notifications
+
+✅ Admin Analytics Dashboard ( real time via python)
+
+✅ SaaS Multi-Tenant Mode ( Multi Branch )
+
+
