@@ -105,9 +105,9 @@ const LoginDashboard = ({ onLogin }: LoginDashboardProps) => {
         <div className="text-center">
           <div className="flex items-center justify-center space-x-2 mb-4">
             <Activity className="h-10 w-10 text-blue-600" />
-            <h1 className="text-3xl font-bold text-gray-900">ClinicOS</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Clinic OS</h1>
           </div>
-          <Badge variant="outline" className="text-xs">CMS v1.0</Badge>
+          <Badge variant="outline" className="text-xs">CMS v2.0</Badge>
           <p className="text-gray-600 mt-2">Clinic Management System</p>
         </div>
 

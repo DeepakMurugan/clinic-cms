@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import axios from "@/lib/axios"; // ← Make sure this is added at the top
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,27 +38,77 @@ const PatientRegistration = () => {
     return `PAT${timestamp}${random}`;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  // const handleSubmit = (e: React.FormEvent) => {
+  //   e.preventDefault();
     
-    if (requiresGuardian && (!formData.parentGuardianName || !formData.parentGuardianPhone)) {
-      toast({
-        title: "Guardian Required",
-        description: "Parent/Guardian details are required for patients under 20 years.",
-        variant: "destructive",
-      });
-      return;
-    }
+  //   if (requiresGuardian && (!formData.parentGuardianName || !formData.parentGuardianPhone)) {
+  //     toast({
+  //       title: "Guardian Required",
+  //       description: "Parent/Guardian details are required for patients under 20 years.",
+  //       variant: "destructive",
+  //     });
+  //     return;
+  //   }
 
-    const patientId = generatePatientId();
-    console.log("Patient registered:", { ...formData, patientId, age: currentAge });
+  //   const patientId = generatePatientId();
+  //   console.log("Patient registered:", { ...formData, patientId, age: currentAge });
     
+  //   toast({
+  //     title: "Patient Registered Successfully",
+  //     description: `Patient ID: ${patientId}`,
+  //   });
+
+  //   // Reset form
+  //   setFormData({
+  //     firstName: "",
+  //     lastName: "",
+  //     age: "",
+  //     gender: "",
+  //     phone: "",
+  //     email: "",
+  //     address: "",
+  //     emergencyContact: "",
+  //     parentGuardianName: "",
+  //     parentGuardianPhone: ""
+  //   });
+  // };
+
+
+    
+
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  if (requiresGuardian && (!formData.parentGuardianName || !formData.parentGuardianPhone)) {
     toast({
-      title: "Patient Registered Successfully",
-      description: `Patient ID: ${patientId}`,
+      title: "Guardian Required",
+      description: "Parent/Guardian details are required for patients under 20 years.",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  const patientId = generatePatientId();
+
+  try {
+    const response = await axios.post("/patients/add", {
+      patient_id: patientId,
+      name: `${formData.firstName} ${formData.lastName}`,
+      age: parseInt(formData.age),
+      gender: formData.gender,
+      phone: formData.phone,
+      email: formData.email,
+      address: formData.address,
+      emergencyContact: formData.emergencyContact,
+      guardian_name: formData.parentGuardianName,
+      guardian_phone: formData.parentGuardianPhone,
     });
 
-    // Reset form
+    toast({
+      title: "Success",
+      description: `Patient ID ${patientId} registered.`,
+    });
+
     setFormData({
       firstName: "",
       lastName: "",
@@ -70,7 +121,21 @@ const PatientRegistration = () => {
       parentGuardianName: "",
       parentGuardianPhone: ""
     });
-  };
+
+  } catch (err: any) {
+    toast({
+      title: "Registration Failed",
+      description: err?.response?.data?.error || "Something went wrong",
+      variant: "destructive",
+    });
+  }
+};
+
+
+
+
+
+
 
   // Mock existing patients for search
   const existingPatients = [
